@@ -3,9 +3,8 @@
 }
 
 .login_contenedor {
-    width: 90%;
-    max-width: 420px;
-    margin: 60px auto;
+    margin-top: 60px;
+    margin-bottom: 60px;
 }
 
 .panel {

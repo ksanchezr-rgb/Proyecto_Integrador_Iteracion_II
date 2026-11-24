@@ -78,22 +78,30 @@ function cerrarFormulario() {
     document.getElementById('panel_formulario').classList.add('oculto');
 }
 
-function guardarTematica(evento) {
+async function guardarTematica(evento) {
     evento.preventDefault();
-    const datos = ValidacionesCatalogos.validar('tematica', tematicas, editando);
-    if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const descripcion = datos.descripcion;
 
-    var tematica = { codigo: codigo, nombre: nombre, descripcion: descripcion };
+    // validaciones
+
+    var tematica = {
+        codigo,
+        nombre,
+        descripcion
+    };
+
+    if (editando === null) {
+        try {
+            await pedirApi('POST', '/tematicas', tematica);
+        } catch (error) {
+            aviso(error.message, 'error');
+            return;
+        }
+    }
 
     if (editando === null) {
         tematicas.push(tematica);
-        aviso('Temática registrada correctamente.', 'exito');
     } else {
         tematicas[editando] = tematica;
-        aviso('Temática modificada correctamente.', 'exito');
     }
 
     guardar();

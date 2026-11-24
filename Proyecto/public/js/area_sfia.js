@@ -79,22 +79,30 @@ function cerrarFormulario() {
     document.getElementById('panel_formulario').classList.add('oculto');
 }
 
-function guardarArea(evento) {
+async function guardarArea(evento) {
     evento.preventDefault();
-    const datos = ValidacionesCatalogos.validar('area_sfia', areas, editando);
-    if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const descripcion = datos.descripcion;
 
-    var area = { codigo: codigo, nombre: nombre, descripcion: descripcion };
+    // validaciones
+
+    var area = {
+        codigo,
+        nombre,
+        descripcion
+    };
+
+    if (editando === null) {
+        try {
+            await pedirApi('POST', '/area_sfia', area);
+        } catch (error) {
+            aviso(error.message, 'error');
+            return;
+        }
+    }
 
     if (editando === null) {
         areas.push(area);
-        aviso('Área registrada correctamente.', 'exito');
     } else {
         areas[editando] = area;
-        aviso('Área modificada correctamente.', 'exito');
     }
 
     guardar();

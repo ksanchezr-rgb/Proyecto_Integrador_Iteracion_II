@@ -113,37 +113,36 @@ function mayuscula(texto) {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function guardarNivel(evento) {
+async function guardarNivel(evento) {
     evento.preventDefault();
-    const datos = ValidacionesCatalogos.validar('nivel', niveles, editando);
-    if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const descripcion = datos.descripcion;
-    const nivel = datos.nivel_complejidad;
-    const codigoNumero = Number(codigo);
+
+    // validaciones
 
     var nuevoNivel = {
-        codigo: codigoNumero,
-        nombre: nombre,
-        descripcion: descripcion,
-        nivel: nivel
+        codigo,
+        nombre,
+        descripcion,
+        nivel
     };
 
-    var mensaje;
+    if (editando === null) {
+        try {
+            await pedirApi('POST', '/niveles', nuevoNivel);
+        } catch (error) {
+            aviso(error.message, 'error');
+            return;
+        }
+    }
 
     if (editando === null) {
         niveles.push(nuevoNivel);
-        mensaje = 'Nivel registrado correctamente.';
     } else {
         niveles[editando] = nuevoNivel;
-        mensaje = 'Nivel actualizado correctamente.';
     }
 
     guardar();
     listar();
     cerrarFormulario();
-    aviso(mensaje, 'exito');
 }
 
 document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);

@@ -184,7 +184,7 @@ function cerrarFormulario() {
 }
 
 // Registrar o modificar una carrera
-function guardarCarrera(evento) {
+async function guardarCarrera(evento) {
     evento.preventDefault();
     const datos = ValidacionesCatalogos.validar('carreras', carreras, editando);
     if (!datos) return;
@@ -197,6 +197,21 @@ function guardarCarrera(evento) {
         nombre: nombre,
         escuela: escuela
     };
+    // Registrar carrera mediante la API.
+    if (editando === null) {
+        try {
+            const resultado = await pedirApi('POST', '/carreras', carrera);
+
+            if (resultado.mensaje) {
+                mostrarMensaje(resultado.mensaje, 'exito');
+            }
+
+        } catch (error) {
+            aviso(error.message, 'error');
+            mostrarMensaje(error.message, 'error');
+            return;
+        }
+    }
 
     if (editando === null) {
         carreras.push(carrera);

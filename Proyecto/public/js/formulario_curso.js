@@ -303,7 +303,7 @@ function validar(datos) {
  
 /* ---------- Guardado ---------- */
  
-function guardarCurso(evento) {
+async function guardarCurso(evento) {
     evento.preventDefault();
     limpiarErrores();
  
@@ -321,6 +321,22 @@ function guardarCurso(evento) {
     const cursos = leerLista(CLAVE_CURSOS);
     const cursoNuevo = { ...datos, codigo: datos.generarCodigo ? '' : datos.codigo, creditos: datos.creditos === '' ? '' : Number(datos.creditos), horas: datos.horas === '' ? '' : Number(datos.horas) };
  
+    // Registrar curso mediante la API.
+    if (cursoEditando === null) {
+        try {
+            const resultado = await pedirApi('POST', '/cursos', cursoNuevo);
+
+            if (resultado.mensaje) {
+                mostrarMensaje(resultado.mensaje, 'exito');
+            }
+
+        } catch (error) {
+            document.getElementById('error_formulario').textContent = error.message;
+            mostrarMensaje(error.message, 'error');
+            return;
+        }
+    }
+
     if (cursoEditando === null) {
         const idNuevo = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
         cursos.push({ ...cursoNuevo, id: idNuevo, fechaRegistro: new Date().toISOString() });

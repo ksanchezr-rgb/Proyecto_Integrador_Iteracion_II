@@ -1,10 +1,7 @@
 /* ===== CATÁLOGO DE METODOLOGÍAS ===== */
-let metodologias = JSON.parse(localStorage.getItem('lista_metodologias')) || [];
-let editando = null;
+let metodologias = [];
 
-function guardar() {
-    localStorage.setItem('lista_metodologias', JSON.stringify(metodologias));
-}
+let editando = null;
 
 function esc(texto) {
     return String(texto ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -65,6 +62,19 @@ function listar() {
         'Mostrando ' + mostradas + ' de ' + metodologias.length + ' metodologías';
 }
 
+async function cargarMetodologias() {
+     try {
+         const respuesta = await pedirApi('GET', '/metodologias');
+        metodologias = Array.isArray(respuesta)
+               ? respuesta
+              : (respuesta.metodologias || respuesta.data || []);
+        listar();
+    } catch (error) {
+           metodologias = [];
+         listar();
+        aviso(error.message || 'No se pudieron cargar las metodologías desde la API.', 'error');
+    }
+ }
 function abrirFormulario() {
     editando = null;
 
@@ -102,40 +112,44 @@ function cerrarFormulario() {
     document.getElementById('panel_formulario').classList.add('oculto');
     document.getElementById('error_formulario').textContent = '';
 }
-
-function guardarMetodologia(evento) {
+async function guardarMetodologia(evento) {
     evento.preventDefault();
     document.getElementById('aviso').className = 'aviso oculto';
+    document.getElementById('error_formulario').textContent = '';
+
     const datos = ValidacionesCatalogos.validar('metodologias', metodologias, editando);
     if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const descripcion = datos.descripcion;
 
     const esNuevo = editando === null;
 
     const metodologia = {
-        codigo: codigo,
-        nombre: nombre,
-        descripcion: descripcion
-    };
-
-    if (esNuevo) {
-        metodologias.push(metodologia);
-    } else {
-        metodologias[editando] = metodologia;
+         codigo: datos.codigo,
+          nombre: datos.nombre,
+         descripcion: datos.descripcion
+        }
     }
+   try {
+        if (esNuevo) {
+            await pedirApi('POST', '/metodologias', metodologia);
+        } else {
+            const actual = metodologias[editando];
+            const idRegistro = actual._id || actual.id || actual.codigo;
+            await pedirApi('PUT', '/metodologias/' + encodeURIComponent(idRegistro), metodologia);
+        }
 
-    guardar();
-    listar();
-    cerrarFormulario();
+        await cargarMetodologias();
+        cerrarFormulario();
 
-    aviso(
-        esNuevo
-            ? 'Metodología registrada correctamente.'
-            : 'Metodología modificada correctamente.',
-        'exito'
-    );
+        aviso(
+            esNuevo
+                ? 'Metodología registrada correctamente.'
+                : 'Metodología modificada correctamente.',
+            'exito'
+        );
+    } catch (error) {
+        document.getElementById('error_formulario').textContent =
+            error.message || 'No se pudo guardar la metodología en la API.';
+    }
 }
 
 // Acciones
@@ -152,4 +166,4 @@ document.getElementById('tablaMetodologiasBody').addEventListener('click', funct
     }
 });
 
-listar();
+cargarMetodologias();

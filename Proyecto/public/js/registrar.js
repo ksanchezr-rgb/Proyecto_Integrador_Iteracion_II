@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let usuarios = JSON.parse(localStorage.getItem('lista_usuarios')) || [];
+    let usuarios = [];
     //Hu-10
     const formulario = document.getElementById('formulario_registro');
     const inputNombre = document.getElementById('nombre');
@@ -28,8 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
         errorFormulario.className = 'error campo_completo oculto';
     }
 
-    const guardarEnStorage = () => {
-        localStorage.setItem('lista_usuarios', JSON.stringify(usuarios));
+    const cargarUsuarios = async () => {
+        try {
+            const respuesta = await pedirApi('GET', '/usuarios');
+            usuarios = Array.isArray(respuesta)
+                ? respuesta
+                : (respuesta.usuarios || respuesta.data || []);
+        } catch (error) {
+            usuarios = [];
+        }
     };
 
     const mostrarErrorGlobal = (mensaje) => {
@@ -102,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Validaciones al enviar el formulario
     if (formulario) {
-        formulario.addEventListener('submit', (evento) => {
+        formulario.addEventListener('submit', async (evento) => {
             evento.preventDefault();
 
             const nombre = inputNombre ? inputNombre.value.trim() : '';
@@ -215,30 +222,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 imagenPerfil 
             };
             
-            usuarios.push(nuevoUsuario);
-            guardarEnStorage();
+           try {
+                await pedirApi('POST', '/usuarios', nuevoUsuario);
+                // BORRADO: antes se hacía usuarios.push(nuevoUsuario); guardarEnStorage();
 
-            mostrarExitoGlobal('¡Su cuenta fue creada con éxito!');
-            
-            formulario.reset();
-            if (errorFormulario) {
-                errorFormulario.textContent = ''; 
-                errorFormulario.classList.add('oculto');
+                mostrarExitoGlobal('¡Su cuenta fue creada con éxito!');
+
+                formulario.reset();
+                if (errorFormulario) {
+                    errorFormulario.textContent = '';
+                    errorFormulario.classList.add('oculto');
+                }
+
+                // Limpiar clases visuales
+                document.querySelectorAll('.formulario_grupo').forEach(grupo => {
+                    grupo.classList.remove('formulario_grupo-correcto', 'formulario_grupo-incorrecto');
+                });
+
+                // Restablecer texto
+                if (inputEdadCalculada) {
+                    inputEdadCalculada.textContent = 'Seleccione su fecha de nacimiento';
+                }
+
+                setTimeout(() => {
+                    window.location.href = 'inicio_para_catalogos.html';
+                }, 2000);
+            } catch (error) {
+                mostrarErrorGlobal(error.message || 'No se pudo registrar el usuario en la API.');
             }
-
-            // Limpiar clases visuales
-            document.querySelectorAll('.formulario_grupo').forEach(grupo => {
-                grupo.classList.remove('formulario_grupo-correcto', 'formulario_grupo-incorrecto');
-            });
-
-            // Restablecer texto 
-            if (inputEdadCalculada) {
-                inputEdadCalculada.textContent = 'Seleccione su fecha de nacimiento';
-            }
-
-            setTimeout(() => {
-                window.location.href = 'inicio_para_catalogos.html';
-            }, 2000);
         });
     }
+
+    // AGREGADO: llama a cargarUsuarios() al cargar la página
+    cargarUsuarios();
 });

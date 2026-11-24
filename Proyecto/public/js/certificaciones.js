@@ -1,12 +1,8 @@
 
 /* ===== CATÁLOGO DE CERTIFICACIONES ===== */
 
-let certificaciones = JSON.parse(localStorage.getItem('certificaciones')) || [];
+let certificaciones = [];
 let editando = null; // null = registrando; número = editando esa posición
-
-function guardar() {
-    localStorage.setItem('certificaciones', JSON.stringify(certificaciones));
-}
 
 function esc(texto) {
     return String(texto)
@@ -19,7 +15,7 @@ function esc(texto) {
 
 // Minúsculas y sin tildes, para facilitar la búsqueda
 function normalizar(texto) {
-    return String(texto)
+    return String(texto??'')
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
@@ -80,6 +76,19 @@ function listar() {
 
     document.getElementById('conteo').textContent ='Mostrando ' + mostradas + ' de ' + certificaciones.length + ' certificaciones';
 }
+async function cargarCertificaciones() {
+    try {
+        const respuesta = await pedirApi('GET', '/certificaciones');
+        certificaciones = Array.isArray(respuesta)
+            ? respuesta
+            : (respuesta.certificaciones || respuesta.data || []);
+        listar();
+    } catch (error) {
+        certificaciones = [];
+        listar();
+        aviso(error.message || 'No se pudieron cargar las certificaciones desde la API.', 'error');
+    }
+}
 
 function abrirFormulario() {
     editando = null;
@@ -125,32 +134,43 @@ function cerrarFormulario() {
     document.getElementById('error_formulario').textContent = '';
 }
 
-function guardarCertificacion(evento) {
+async function guardarCertificacion(evento) {
     evento.preventDefault();
+    document.getElementById('aviso').className = 'aviso oculto';
+    document.getElementById('error_formulario').textContent = '';
     const datos = ValidacionesCatalogos.validar('certificaciones', certificaciones, editando);
     if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const descripcion = datos.descripcion;
+    const esNuevo = editando === null;
 
     const certificacion = {
-        codigo: codigo,
-        nombre: nombre,
-        descripcion: descripcion
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion
     };
+    
+    try {
+            if (esNuevo) {
+                await pedirApi('POST', '/certificaciones', certificacion);
+            } else {
+                const actual = certificaciones[editando];
+                const idRegistro = actual._id || actual.id || actual.codigo;
+                await pedirApi('PUT', '/certificaciones/' + encodeURIComponent(idRegistro), certificacion);
+            }
 
-    if (editando === null) {
-        certificaciones.push(certificacion);
-        aviso('Certificación registrada correctamente.', 'exito');
-    } else {
-        certificaciones[editando] = certificacion;
-        aviso('Certificación modificada correctamente.', 'exito');
+            await cargarCertificaciones();
+            cerrarFormulario();
+
+            aviso(
+                esNuevo
+                    ? 'Certificación registrada correctamente.'
+                    : 'Certificación modificada correctamente.',
+                'exito'
+            );
+        } catch (error) {
+            document.getElementById('error_formulario').textContent =
+                error.message || 'No se pudo guardar la certificación en la API.';
+        }
     }
-
-    guardar();
-    listar();
-    cerrarFormulario();
-}
 // Acciones
 document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);
 document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
@@ -164,4 +184,4 @@ document.getElementById('tablaCertificacionesBody').addEventListener('click', fu
         }
     });
 
-listar();
+cargarCertificaciones();

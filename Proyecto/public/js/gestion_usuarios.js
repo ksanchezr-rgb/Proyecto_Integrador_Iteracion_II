@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Cargar la lista de usuarios del localStorage de forma dinámica
-    let usuarios = JSON.parse(localStorage.getItem('lista_usuarios')) || [];
+    // Lista de usuarios cargada desde la API
+    let usuarios = [];
     
     const cuerpoTabla = document.getElementById('cuerpo_tabla_usuarios');
     const conteoUsuarios = document.getElementById('conteo_usuarios');
@@ -92,9 +92,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+   const cargarUsuarios = async () => {
+        try {
+            const respuesta = await pedirApi('GET', '/usuarios');
+            usuarios = Array.isArray(respuesta)
+                ? respuesta
+                : (respuesta.usuarios || respuesta.data || []);
+            renderizarTabla();
+        } catch (error) {
+            usuarios = [];
+            renderizarTabla();
+            if (errorFormulario) {
+                errorFormulario.textContent = error.message || 'No se pudieron cargar los usuarios desde la API.';
+                errorFormulario.className = 'error campo_completo';
+            }
+        }
+    };
+
     if (inputBuscar) {
         inputBuscar.addEventListener('input', renderizarTabla);
     }
-    // Inicializar la tabla al cargar la vista
-    renderizarTabla(usuarios);
+
+    if (btnBuscar) {
+        btnBuscar.addEventListener('click', renderizarTabla);
+    }
+
+    if (btnLimpiar && inputBuscar) {
+        btnLimpiar.addEventListener('click', () => {
+            inputBuscar.value = '';
+            renderizarTabla();
+        });
+    }
+
+    // Inicializar la tabla cargando desde la API
+    cargarUsuarios();
+
 });

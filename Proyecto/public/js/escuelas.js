@@ -124,7 +124,7 @@ function cerrarFormulario() {
     document.getElementById('error_formulario').textContent = '';
 }
 
-function guardarEscuela(evento) {
+async function guardarEscuela(evento) {
     evento.preventDefault();
     const datos = ValidacionesCatalogos.validar('escuelas', escuelas, editando);
     if (!datos) return;
@@ -137,6 +137,21 @@ function guardarEscuela(evento) {
         nombre: nombre,
         director: director
     };
+    // Registrar escuela mediante la API.
+    if (editando === null) {
+        try {
+            const resultado = await pedirApi('POST', '/escuelas', escuela);
+
+            if (resultado.mensaje) {
+                mostrarMensaje(resultado.mensaje, 'exito');
+            }
+
+        } catch (error) {
+            aviso(error.message, 'error');
+            mostrarMensaje(error.message, 'error');
+            return;
+        }
+    }
 
     if (editando === null) {
         escuelas.push(escuela);

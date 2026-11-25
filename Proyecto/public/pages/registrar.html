@@ -4,29 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Cuenta - Sistema Curricular CENFOTEC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilos.css">
     <link rel="stylesheet" href="../css/registrar.css">
      <link rel="stylesheet" href="../css/perfil_usuario.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body data-menu="registro">
+<body class="min-vh-100 d-flex flex-column bg-white text-dark">
     <!-- Menú de navegación institucional -->
-    <header class="header">
-        <nav class="menu">
-            <input type="checkbox" id="check">
-            <label for="check" class="checkbtn">
-                <i class="bx bx-menu"></i>
-            </label>
-            <div class="logo">
+    <header class="navbar navbar-expand-lg navbar-dark header">
+        <div class="container-fluid menu px-4 py-2"></div>
+            <div class="d-flex align-items-center gap-3 logo">
                 <img src="../img/images-removebg-preview.png" alt="Logo CENFOTEC" class="imagen">
-                <span class="logo_texto"></span>
+                <span class="logo_texto fw-bold text-white fs-5"></span>
             </div>
-            <ul class="opciones" aria-label="Navegación principal"></ul>
-        </nav>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                aria-controls="menuPrincipal" aria-expanded="false" aria-label="Alternar navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-end" id="menuPrincipal">
+                <ul class="navbar-nav align-items-lg-center gap-lg-3 fw-bold small opciones">
+                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="gestion_usuarios.html">USUARIOS</a></li>
+                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu enlace_activo" href="inicio_para_catalogos.html">CATÁLOGOS</a></li>
+                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="cursos.html">CURSOS</a></li>
+                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="reportes.html">REPORTES</a></li>
+                    <li class="nav-item elemento_menu"><button type="button" class="btn text-white fw-bold small rounded-pill px-3 py-2 btn_header btn_idioma">ES / EN</button></li>
+                    <li class="nav-item elemento_menu"><button type="button" class="btn text-white fw-bold small rounded-3 border-0 px-3 py-2 btn_header btn_salir">SALIR</button></li>
+                </ul>
+            </div>
+        </div>
     </header>
 
     <main id="inicio">
-        <div class="seccion-catalogo-contenedor" style="justify-content: center; padding: 20px;">
+        <div class="row g-0 w-100 seccion-catalogo-contenedor" style="justify-content: center; padding: 20px;">
             
             <!--HU-10: Registrar una nueva cuenta de usuario -->
             <div class="catalogo_contenedor-principal" style="width: 100%; max-width: 800px;">
@@ -153,8 +164,8 @@
                         <!-- Botones de Acción -->
                         <div class="formulario__grupo formulario__grupo-acciones" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
                             <p class="formulario_mensaje-exito" id="formulario_mensaje-exito"style="display: none !important;"></p>
-                            <button type="button" class="btn_cancelar" onclick="window.location.href='iniciar_session.html'">CANCELAR</button>
-                            <input class="btn_enviar" type="submit" value="REGISTRAR CUENTA">
+                            <button type="button" class="btn btn-secondary fw-bold small px-3 py-2 btn_cancelar" onclick="window.location.href='iniciar_session.html'">CANCELAR</button>
+                            <input class="btn text-white fw-bold small px-3 py-2 btn_enviar" type="submit" value="REGISTRAR CUENTA">
                         </div>
 
                     </form>

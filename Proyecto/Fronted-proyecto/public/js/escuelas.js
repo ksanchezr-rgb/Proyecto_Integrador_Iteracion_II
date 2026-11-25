@@ -1,12 +1,11 @@
 
 /* ===== CATÁLOGO DE ESCUELAS ===== */
+// segunda iteracion vamos a empezar a utilizar las funciones de la api en vez de las de localStorage, para ello creamos un archivo
+//api.js que contiene las funciones para hacer peticiones a la api, y lo importamos en este archivo Luego modificamos
+//este archivo para que use las funciones de la api
 
-var escuelas = JSON.parse(localStorage.getItem('escuelas')) || [];
+var escuelas = [];
 var editando = null; // null = registrando; número = editando
-
-function guardar() {
-    localStorage.setItem('escuelas', JSON.stringify(escuelas));
-}
 
 function esc(texto) {
     return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -20,6 +19,14 @@ function aviso(texto, tipo) {
     var caja = document.getElementById('aviso');
     caja.textContent = texto;
     caja.className = 'aviso ' + tipo;
+}
+async function cargarEscuelas() {
+    try {
+        escuelas = await pedirApi('GET', '/escuelas');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 function listar() {
@@ -50,10 +57,13 @@ function listar() {
             '<td>' + esc(escuela.nombre) + '</td>' +
             '<td>' + esc(escuela.director) + '</td>' +
             '<td class="acciones">' +
-                '<button type="button" class="btn_tabla" data-indice="' + i + '">' +
-                    'EDITAR' +
-                '</button>' +
-            '</td>' +
+            '<button type="button" class="btn_tabla" data-indice="' + i + '">' +
+                'EDITAR' +
+            '</button>' +
+            '<button type="button" class="btn_eliminar" data-indice="' + i + '">' +
+                'ELIMINAR' +
+            '</button>' +
+        '</td>' +
         '</tr>';
     }
 
@@ -126,57 +136,84 @@ function cerrarFormulario() {
 
 async function guardarEscuela(evento) {
     evento.preventDefault();
-    const datos = ValidacionesCatalogos.validar('escuelas', escuelas, editando);
+
+    const datos = ValidacionesCatalogos.validar(
+        'escuelas', escuelas, editando
+    );
+
     if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    var director = document.getElementById('director').selectedOptions[0].text.trim();
 
-    var escuela = {
-        codigo: codigo,
-        nombre: nombre,
-        director: director
+    const escuela = {
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        director: document.getElementById('director')
+            .selectedOptions[0].text.trim()
     };
-    // Registrar escuela mediante la API.
-    if (editando === null) {
-        try {
-            const resultado = await pedirApi('POST', '/escuelas', escuela);
 
-            if (resultado.mensaje) {
-                mostrarMensaje(resultado.mensaje, 'exito');
-            }
+    try {
+        let resultado;
 
-        } catch (error) {
-            aviso(error.message, 'error');
-            mostrarMensaje(error.message, 'error');
-            return;
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/escuelas', escuela
+            );
+        } else {
+            const id = escuelas[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/escuelas/${id}`, escuela
+            );
         }
-    }
 
-    if (editando === null) {
-        escuelas.push(escuela);
-        aviso('Escuela registrada correctamente.', 'exito');
-    } else {
-        escuelas[editando] = escuela;
-        aviso('Escuela modificada correctamente.', 'exito');
-    }
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarEscuelas();
 
-    guardar();
-    listar();
-    cerrarFormulario();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
+async function eliminarEscuela(escuela) {
+
+    if (!confirm(`¿Eliminar "${escuela.nombre}"?`)) {
+        return;
+    }
+
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/escuelas/${escuela._id}`
+        );
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarEscuelas();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
 //accion
 document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);
 document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
 document.getElementById('formulario').addEventListener('submit', guardarEscuela);
 document.getElementById('buscador').addEventListener('input', listar);
-document.getElementById('cuerpo_tabla').addEventListener('click', function (evento) {
-        var boton = evento.target.closest('.btn_tabla');
+document.getElementById('cuerpo_tabla')
+    .addEventListener('click', function (evento) {
 
-        if (boton) {
-            editar(parseInt(boton.getAttribute('data-indice'), 10));
+        var botonEditar = evento.target.closest('.btn_tabla');
+
+        var botonEliminar = evento.target.closest('.btn_eliminar');
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarEscuela(escuelas[indice]);
         }
     });
 
-listar();
+cargarEscuelas();

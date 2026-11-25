@@ -1,10 +1,6 @@
 /* ===== Tematica ===== */
-var tematicas = JSON.parse(localStorage.getItem('tematica')) || [];
-var editando = null; // null = registrando; número = editando esa posición
-
-function guardar() {
-    localStorage.setItem('tematica', JSON.stringify(tematicas));
-}
+var tematicas = [];
+var editando = null;
 
 function esc(texto) {
     return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -18,6 +14,15 @@ function aviso(texto, tipo) {
     var caja = document.getElementById('aviso');
     caja.textContent = texto;
     caja.className = 'aviso ' + tipo;
+}
+
+async function cargarTematicas() {
+    try {
+        tematicas = await pedirApi('GET', '/tematicas');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 function listar() {
@@ -38,7 +43,10 @@ function listar() {
             '<td class="codigo">' + esc(a.codigo) + '</td>' +
             '<td>' + esc(a.nombre) + '</td>' +
             '<td>' + esc(a.descripcion) + '</td>' +
-            '<td class="acciones"><button type="button" class="btn_tabla" data-indice="' + i + '">EDITAR</button></td>' +
+            '<td class="acciones">' +
+            '<button type="button" class="btn_tabla" data-indice="' + i + '">' + 'EDITAR' + '</button>' +
+            '<button type="button" class="btn_eliminar" data-indice="' + i + '">' + 'ELIMINAR' + '</button>' +
+            '</td>' +
             '</tr>';
     }
 
@@ -81,32 +89,60 @@ function cerrarFormulario() {
 async function guardarTematica(evento) {
     evento.preventDefault();
 
-    // validaciones
+    const datos = ValidacionesCatalogos.validar(
+        'tematica', tematicas, editando
+    );
 
-    var tematica = {
-        codigo,
-        nombre,
-        descripcion
+    if (!datos) return;
+
+    const tematica = {
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion
     };
 
-    if (editando === null) {
-        try {
-            await pedirApi('POST', '/tematicas', tematica);
-        } catch (error) {
-            aviso(error.message, 'error');
-            return;
+    try {
+        let resultado;
+
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/tematicas', tematica
+            );
+        } else {
+            const id = tematicas[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/tematicas/${id}`, tematica
+            );
         }
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarTematicas();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+async function eliminarTematica(tematica) {
+
+    if (!confirm(`¿Eliminar "${tematica.nombre}"?`)) {
+        return;
     }
 
-    if (editando === null) {
-        tematicas.push(tematica);
-    } else {
-        tematicas[editando] = tematica;
-    }
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/tematicas/${tematica._id}`
+        );
 
-    guardar();
-    listar();
-    cerrarFormulario();
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarTematicas();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 // Eventos (sin onclick/onsubmit dentro del HTML)
@@ -114,11 +150,21 @@ document.getElementById('btn_registrar').addEventListener('click', abrirFormular
 document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
 document.getElementById('formulario').addEventListener('submit', guardarTematica);
 document.getElementById('buscador').addEventListener('input', listar);
-document.getElementById('cuerpo_tabla').addEventListener('click', function (evento) {
-    var boton = evento.target.closest('.btn_tabla');
-    if (boton) {
-        editar(parseInt(boton.getAttribute('data-indice'), 10));
-    }
-});
+document.getElementById('cuerpo_tabla')
+    .addEventListener('click', function(evento) {
 
-listar();
+        var botonEditar = evento.target.closest('.btn_tabla');
+        var botonEliminar = evento.target.closest('.btn_eliminar');
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarTematica(tematicas[indice]);
+        }
+    });
+
+cargarTematicas();

@@ -44,6 +44,7 @@ function listar() {
             '<td>' + esc(metodologia.descripcion) + '</td>' +
             '<td class="acciones">' +
                 '<button type="button" class="btn_tabla" data-indice="' + i + '">EDITAR</button>' +
+                '<button type="button" class="btn_eliminar" data-indice="' + i + '">ELIMINAR</button>' +
             '</td>' +
         '</tr>';
     }
@@ -63,18 +64,14 @@ function listar() {
 }
 
 async function cargarMetodologias() {
-     try {
-         const respuesta = await pedirApi('GET', '/metodologias');
-        metodologias = Array.isArray(respuesta)
-               ? respuesta
-              : (respuesta.metodologias || respuesta.data || []);
+    try {
+        metodologias = await pedirApi('GET', '/metodologias');
         listar();
     } catch (error) {
-           metodologias = [];
-         listar();
-        aviso(error.message || 'No se pudieron cargar las metodologías desde la API.', 'error');
+        aviso(error.message, 'error');
     }
- }
+}
+
 function abrirFormulario() {
     editando = null;
 
@@ -112,43 +109,63 @@ function cerrarFormulario() {
     document.getElementById('panel_formulario').classList.add('oculto');
     document.getElementById('error_formulario').textContent = '';
 }
+
 async function guardarMetodologia(evento) {
     evento.preventDefault();
-    document.getElementById('aviso').className = 'aviso oculto';
-    document.getElementById('error_formulario').textContent = '';
 
-    const datos = ValidacionesCatalogos.validar('metodologias', metodologias, editando);
+    const datos = ValidacionesCatalogos.validar(
+        'metodologias', metodologias, editando
+    );
+
     if (!datos) return;
 
-    const esNuevo = editando === null;
-
     const metodologia = {
-         codigo: datos.codigo,
-          nombre: datos.nombre,
-         descripcion: datos.descripcion
-        }
-    }
-   try {
-        if (esNuevo) {
-            await pedirApi('POST', '/metodologias', metodologia);
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion
+    };
+
+    try {
+        let resultado;
+
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/metodologias', metodologia
+            );
         } else {
-            const actual = metodologias[editando];
-            const idRegistro = actual._id || actual.id || actual.codigo;
-            await pedirApi('PUT', '/metodologias/' + encodeURIComponent(idRegistro), metodologia);
+            const id = metodologias[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/metodologias/${id}`, metodologia
+            );
         }
 
-        await cargarMetodologias();
+        aviso(resultado.mensaje, 'exito');
         cerrarFormulario();
+        await cargarMetodologias();
 
-        aviso(
-            esNuevo
-                ? 'Metodología registrada correctamente.'
-                : 'Metodología modificada correctamente.',
-            'exito'
-        );
     } catch (error) {
-        document.getElementById('error_formulario').textContent =
-            error.message || 'No se pudo guardar la metodología en la API.';
+        aviso(error.message, 'error');
+    }
+}
+
+async function eliminarMetodologia(metodologia) {
+
+    if (!confirm(`¿Eliminar "${metodologia.nombre}"?`)) {
+        return;
+    }
+
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/metodologias/${metodologia._id}`
+        );
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarMetodologias();
+
+    } catch (error) {
+        aviso(error.message, 'error');
     }
 }
 
@@ -158,12 +175,20 @@ document.getElementById('btn_cancelar').addEventListener('click', cerrarFormular
 document.getElementById('formulario').addEventListener('submit', guardarMetodologia);
 document.getElementById('buscadorMetodologias').addEventListener('input', listar);
 
-document.getElementById('tablaMetodologiasBody').addEventListener('click', function(evento) {
-    const boton = evento.target.closest('.btn_tabla');
+document.getElementById('tablaMetodologiasBody')
+    .addEventListener('click', function(evento) {
 
-    if (boton) {
-        editar(parseInt(boton.getAttribute('data-indice'), 10));
-    }
-});
+        const botonEditar = evento.target.closest('.btn_tabla');
+        const botonEliminar = evento.target.closest('.btn_eliminar');
 
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarMetodologia(metodologias[indice]);
+        }
+    });
 cargarMetodologias();

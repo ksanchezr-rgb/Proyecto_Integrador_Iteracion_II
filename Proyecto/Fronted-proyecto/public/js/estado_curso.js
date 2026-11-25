@@ -1,12 +1,26 @@
 /* ===== CATÁLOGO DE ESTADOS DEL CURSO ===== */
 
-const estados = (JSON.parse(localStorage.getItem('estado_curso')) || []).map(estado => estado.nombre);
+let estados = [];
 
 function normalizar(texto) {
     return String(texto)
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
+}
+
+async function cargarEstados() {
+    try {
+        const datos = await pedirApi('GET', '/estados-curso');
+
+        estados = datos.map(estado => estado.nombre);
+
+        listar();
+
+    } catch (error) {
+        document.getElementById('conteo').textContent =
+            error.message;
+    }
 }
 
 function listar() {
@@ -47,4 +61,4 @@ function listar() {
 
 document.getElementById('buscador').addEventListener('input', listar);
 
-listar();
+cargarEstados();

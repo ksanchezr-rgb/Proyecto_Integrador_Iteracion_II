@@ -1,9 +1,5 @@
-var niveles = JSON.parse(localStorage.getItem('nivel')) || [];
+var niveles = [];
 var editando = null;
-
-function guardar() {
-    localStorage.setItem('nivel', JSON.stringify(niveles));
-}
 
 function esc(texto) {
     return String(texto === undefined ? '' : texto)
@@ -31,6 +27,15 @@ function limpiarErrores() {
     document.getElementById('error_formulario').textContent = '';
 }
 
+async function cargarNiveles() {
+    try {
+        niveles = await pedirApi('GET', '/niveles');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
 function listar() {
     var filtro = normalizar(document.getElementById('buscador').value.trim());
     var html = '';
@@ -53,6 +58,7 @@ function listar() {
             '<td>' + esc(nivel.nivel) + '</td>' +
             '<td>' +
                 '<button type="button" class="btn_tabla" data-accion="editar" data-indice="' + i + '">EDITAR</button>' +
+                '<button type="button" class="btn_eliminar" data-accion="eliminar" data-indice="' + i + '">ELIMINAR</button>' +
             '</td>' +
         '</tr>';
     }
@@ -116,33 +122,61 @@ function mayuscula(texto) {
 async function guardarNivel(evento) {
     evento.preventDefault();
 
-    // validaciones
+    const datos = ValidacionesCatalogos.validar(
+        'nivel', niveles, editando
+    );
 
-    var nuevoNivel = {
-        codigo,
-        nombre,
-        descripcion,
-        nivel
+    if (!datos) return;
+
+    const nivel = {
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        nivel: datos.nivel_complejidad
     };
 
-    if (editando === null) {
-        try {
-            await pedirApi('POST', '/niveles', nuevoNivel);
-        } catch (error) {
-            aviso(error.message, 'error');
-            return;
+    try {
+        let resultado;
+
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/niveles', nivel
+            );
+        } else {
+            const id = niveles[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/niveles/${id}`, nivel
+            );
         }
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarNiveles();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+async function eliminarNivel(nivel) {
+
+    if (!confirm(`¿Eliminar "${nivel.nombre}"?`)) {
+        return;
     }
 
-    if (editando === null) {
-        niveles.push(nuevoNivel);
-    } else {
-        niveles[editando] = nuevoNivel;
-    }
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/niveles/${nivel._id}`
+        );
 
-    guardar();
-    listar();
-    cerrarFormulario();
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarNiveles();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);
@@ -150,12 +184,26 @@ document.getElementById('btn_cancelar').addEventListener('click', cerrarFormular
 document.getElementById('formulario').addEventListener('submit', guardarNivel);
 document.getElementById('buscador').addEventListener('input', listar);
 
-document.getElementById('cuerpo_tabla').addEventListener('click', function (evento) {
-    var boton = evento.target.closest('[data-accion="editar"]');
+document.getElementById('cuerpo_tabla')
+    .addEventListener('click', function(evento) {
 
-    if (boton) {
-        editarNivel(Number(boton.dataset.indice));
-    }
-});
+        var botonEditar = evento.target.closest(
+            '[data-accion="editar"]'
+        );
 
-listar();
+        var botonEliminar = evento.target.closest(
+            '[data-accion="eliminar"]'
+        );
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editarNivel(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarNivel(niveles[indice]);
+        }
+    });
+
+cargarNiveles();

@@ -1,10 +1,19 @@
 
 /* ===== CATÁLOGO DE MONEDAS ===== */
-
-const monedas = JSON.parse(localStorage.getItem('moneda')) || [];
+let monedas = [];
 
 function normalizar(texto) {
     return String(texto).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+async function cargarMonedas() {
+    try {
+        monedas = await pedirApi('GET', '/monedas');
+        listar();
+    } catch (error) {
+        document.getElementById('conteo').textContent =
+            error.message;
+    }
 }
 
 function listar() {
@@ -29,4 +38,4 @@ function listar() {
 
 document.getElementById('buscador').addEventListener('input', listar);
 
-listar();
+cargarMonedas();

@@ -1,15 +1,9 @@
 
 /* ===== CATÁLOGO DE CARRERAS ===== */
 
-// toma formato json y lo convierte a un arreglo de esceujas js
-var carreras = JSON.parse(localStorage.getItem('carreras')) || [];
-var escuelas = JSON.parse(localStorage.getItem('escuelas')) || [];
+var carreras = [];
+var escuelas = [];
 var editando = null;
-
-// Guardar carreras que es js a json y lo guarda con local storage
-function guardar() {
-    localStorage.setItem('carreras', JSON.stringify(carreras));
-}
 
 // Escapar texto para mostrarlo en la tabla
 function esc(texto) {
@@ -29,11 +23,6 @@ function normalizar(texto) {
         .replace(/[\u0300-\u036f]/g, '');
 }
 
-// Actualizar las escuelas guardadas
-function actualizarEscuelas() {
-    escuelas = JSON.parse(localStorage.getItem('escuelas')) || [];
-}
-
 // Obtener el nombre de una escuela a partir de su código
 function obtenerNombreEscuela(codigo) {
     var escuela = escuelas.find(function(item) {
@@ -51,28 +40,41 @@ function aviso(texto, tipo) {
 }
 
 // Cargar las escuelas en el select
-function cargarEscuelas() {
-    actualizarEscuelas();
+async function cargarEscuelas() {
+    try {
+        escuelas = await pedirApi('GET', '/escuelas');
 
-    var select = document.getElementById('escuela');
-    var codigoSeleccionado = select.value;
+        var select = document.getElementById('escuela');
+        var codigoSeleccionado = select.value;
 
-    select.innerHTML = '<option value="">Seleccione una escuela</option>';
+        select.innerHTML =
+            '<option value="">Seleccione una escuela</option>';
 
-    escuelas.forEach(function(escuela) {
-        var opcion = document.createElement('option');
-        opcion.value = escuela.codigo;
-        opcion.textContent = escuela.nombre;
-        select.appendChild(opcion);
-    });
+        escuelas.forEach(function(escuela) {
+            var opcion = document.createElement('option');
+            opcion.value = escuela.codigo;
+            opcion.textContent = escuela.nombre;
+            select.appendChild(opcion);
+        });
 
-    // Conservar la selección si sigue existiendo
-    select.value = codigoSeleccionado;
+        select.value = codigoSeleccionado;
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+async function cargarCarreras() {
+    try {
+        carreras = await pedirApi('GET', '/carreras');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 // Listar y buscar carreras
 function listar() {
-    actualizarEscuelas();
 
     var filtro = normalizar(
         document.getElementById('buscador').value.trim()
@@ -107,6 +109,10 @@ function listar() {
                 i + '">' +
                     'EDITAR' +
                 '</button>' +
+                '<button type="button" class="btn_eliminar" data-indice="' +
+                i + '">' +
+                    'ELIMINAR' +
+                '</button>' +
             '</td>' +
         '</tr>';
     }
@@ -129,7 +135,7 @@ function listar() {
 }
 
 // Abrir formulario para registrar
-function abrirFormulario() {
+async function abrirFormulario() {
     editando = null;
 
     document.getElementById('titulo_formulario').textContent =
@@ -140,7 +146,7 @@ function abrirFormulario() {
     document.getElementById('error_formulario').textContent = '';
     document.getElementById('aviso').className = 'aviso oculto';
 
-    cargarEscuelas();
+    await cargarEscuelas();
 
     document.getElementById('panel_formulario')
         .classList.remove('oculto');
@@ -149,12 +155,12 @@ function abrirFormulario() {
 }
 
 // Editar una carrera
-function editar(i) {
+async function editar(i) {
     if (i < 0 || i >= carreras.length) {
         return;
     }
 
-    abrirFormulario();
+   await abrirFormulario();
 
     editando = i;
 
@@ -186,68 +192,91 @@ function cerrarFormulario() {
 // Registrar o modificar una carrera
 async function guardarCarrera(evento) {
     evento.preventDefault();
-    const datos = ValidacionesCatalogos.validar('carreras', carreras, editando);
+
+    const datos = ValidacionesCatalogos.validar(
+        'carreras', carreras, editando
+    );
+
     if (!datos) return;
-    const codigo = datos.codigo;
-    const nombre = datos.nombre;
-    const escuela = datos.escuela;
 
-    var carrera = {
-        codigo: codigo,
-        nombre: nombre,
-        escuela: escuela
+    const carrera = {
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        escuela: datos.escuela
     };
-    // Registrar carrera mediante la API.
-    if (editando === null) {
-        try {
-            const resultado = await pedirApi('POST', '/carreras', carrera);
 
-            if (resultado.mensaje) {
-                mostrarMensaje(resultado.mensaje, 'exito');
-            }
+    try {
+        let resultado;
 
-        } catch (error) {
-            aviso(error.message, 'error');
-            mostrarMensaje(error.message, 'error');
-            return;
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/carreras', carrera
+            );
+        } else {
+            const id = carreras[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/carreras/${id}`, carrera
+            );
         }
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarCarreras();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+async function eliminarCarrera(carrera) {
+
+    if (!confirm(`¿Eliminar "${carrera.nombre}"?`)) {
+        return;
     }
 
-    if (editando === null) {
-        carreras.push(carrera);
-        aviso('Carrera registrada correctamente.', 'exito');
-    } else {
-        carreras[editando] = carrera;
-        aviso('Carrera modificada correctamente.', 'exito');
-    }
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/carreras/${carrera._id}`
+        );
 
-    guardar();
-    listar();
-    cerrarFormulario();
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarCarreras();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 // Eventos
-document.getElementById('btn_registrar')
-    .addEventListener('click', abrirFormulario);
+document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);
 
-document.getElementById('btn_cancelar')
-    .addEventListener('click', cerrarFormulario);
+document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
 
-document.getElementById('formulario')
-    .addEventListener('submit', guardarCarrera);
+document.getElementById('formulario').addEventListener('submit', guardarCarrera);
 
-document.getElementById('buscador')
-    .addEventListener('input', listar);
+document.getElementById('buscador').addEventListener('input', listar);
 
-document.getElementById('cuerpo_tabla')
-    .addEventListener('click', function(evento) {
-        var boton = evento.target.closest('.btn_tabla');
+document.getElementById('cuerpo_tabla').addEventListener('click', function(evento) {
 
-        if (boton) {
-            editar(parseInt(boton.getAttribute('data-indice'), 10));
+        var botonEditar = evento.target.closest('.btn_tabla');
+        var botonEliminar = evento.target.closest('.btn_eliminar');
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarCarrera(carreras[indice]);
         }
     });
-
 // Inicializar catálogo
-cargarEscuelas();
-listar();
+async function inicializar() {
+    await cargarEscuelas();
+    await cargarCarreras();
+}
+
+inicializar();

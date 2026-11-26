@@ -1,10 +1,6 @@
 /* ===== ÁREA SFIA ===== */
-var areas = JSON.parse(localStorage.getItem('area_sfia')) || [];
-var editando = null; // null = registrando; número = editando esa posición
-
-function guardar() {
-    localStorage.setItem('area_sfia', JSON.stringify(areas));
-}
+var areas = [];
+var editando = null;
 
 function esc(texto) {
     return String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -19,6 +15,15 @@ function aviso(texto, tipo) {
     var caja = document.getElementById('aviso');
     caja.textContent = texto;
     caja.className = 'aviso ' + tipo;
+}
+
+async function cargarAreas() {
+    try {
+        areas = await pedirApi('GET', '/area_sfia');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 function listar() {
@@ -39,7 +44,10 @@ function listar() {
             '<td class="codigo">' + esc(a.codigo) + '</td>' +
             '<td>' + esc(a.nombre) + '</td>' +
             '<td>' + esc(a.descripcion) + '</td>' +
-            '<td class="acciones"><button type="button" class="btn_tabla" data-indice="' + i + '">EDITAR</button></td>' +
+            '<td class="acciones">' +
+            '<button type="button" class="btn_tabla" data-indice="' + i + '">' + 'EDITAR' + '</button>' +
+            '<button type="button" class="btn_eliminar" data-indice="' + i + '">' + 'ELIMINAR' +'</button>' +
+        '</td>' +
             '</tr>';
     }
 
@@ -82,32 +90,58 @@ function cerrarFormulario() {
 async function guardarArea(evento) {
     evento.preventDefault();
 
-    // validaciones
+    const datos = ValidacionesCatalogos.validar(
+        'area_sfia', areas, editando
+    );
 
-    var area = {
-        codigo,
-        nombre,
-        descripcion
+    if (!datos) return;
+
+    const area = {
+        codigo: datos.codigo,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion
     };
 
-    if (editando === null) {
-        try {
-            await pedirApi('POST', '/area_sfia', area);
-        } catch (error) {
-            aviso(error.message, 'error');
-            return;
+    try {
+        let resultado;
+
+        if (editando === null) {
+            resultado = await pedirApi('POST', '/area_sfia', area);
+        } else {
+            const id = areas[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/area_sfia/${id}`, area
+            );
         }
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarAreas();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+async function eliminarArea(area) {
+
+    if (!confirm(`¿Eliminar "${area.nombre}"?`)) {
+        return;
     }
 
-    if (editando === null) {
-        areas.push(area);
-    } else {
-        areas[editando] = area;
-    }
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/area_sfia/${area._id}`
+        );
 
-    guardar();
-    listar();
-    cerrarFormulario();
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarAreas();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
 }
 
 // Eventos (sin onclick/onsubmit dentro del HTML)
@@ -115,11 +149,20 @@ document.getElementById('btn_registrar').addEventListener('click', abrirFormular
 document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
 document.getElementById('formulario').addEventListener('submit', guardarArea);
 document.getElementById('buscador').addEventListener('input', listar);
-document.getElementById('cuerpo_tabla').addEventListener('click', function (evento) {
-    var boton = evento.target.closest('.btn_tabla');
-    if (boton) {
-        editar(parseInt(boton.getAttribute('data-indice'), 10));
-    }
-});
+document.getElementById('cuerpo_tabla')
+    .addEventListener('click', function(evento) {
 
-listar();
+        var botonEditar = evento.target.closest('.btn_tabla');
+        var botonEliminar = evento.target.closest('.btn_eliminar');
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarArea(areas[indice]);
+        }
+    });
+cargarAreas();

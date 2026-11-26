@@ -55,9 +55,8 @@ function listar() {
             '<td>' + esc(certificacion.nombre) + '</td>' +
             '<td>' + esc(certificacion.descripcion) + '</td>' +
             '<td class="acciones">' +
-                '<button type="button" class="btn_tabla" data-indice="' + i + '">' +
-                    'EDITAR' +
-                '</button>' +
+                '<button type="button" class="btn_tabla" data-indice="' + i + '">' + 'EDITAR' + '</button>' +
+                '<button type="button" class="btn_eliminar" data-indice="' + i + '">' + 'ELIMINAR' + '</button>' +
             '</td>' +
         '</tr>';
     }
@@ -76,17 +75,13 @@ function listar() {
 
     document.getElementById('conteo').textContent ='Mostrando ' + mostradas + ' de ' + certificaciones.length + ' certificaciones';
 }
+
 async function cargarCertificaciones() {
     try {
-        const respuesta = await pedirApi('GET', '/certificaciones');
-        certificaciones = Array.isArray(respuesta)
-            ? respuesta
-            : (respuesta.certificaciones || respuesta.data || []);
+        certificaciones = await pedirApi('GET', '/certificaciones');
         listar();
     } catch (error) {
-        certificaciones = [];
-        listar();
-        aviso(error.message || 'No se pudieron cargar las certificaciones desde la API.', 'error');
+        aviso(error.message, 'error');
     }
 }
 
@@ -136,51 +131,82 @@ function cerrarFormulario() {
 
 async function guardarCertificacion(evento) {
     evento.preventDefault();
-    document.getElementById('aviso').className = 'aviso oculto';
-    document.getElementById('error_formulario').textContent = '';
-    const datos = ValidacionesCatalogos.validar('certificaciones', certificaciones, editando);
+
+    const datos = ValidacionesCatalogos.validar(
+        'certificaciones', certificaciones, editando
+    );
+
     if (!datos) return;
-    const esNuevo = editando === null;
 
     const certificacion = {
         codigo: datos.codigo,
         nombre: datos.nombre,
         descripcion: datos.descripcion
     };
-    
+
     try {
-            if (esNuevo) {
-                await pedirApi('POST', '/certificaciones', certificacion);
-            } else {
-                const actual = certificaciones[editando];
-                const idRegistro = actual._id || actual.id || actual.codigo;
-                await pedirApi('PUT', '/certificaciones/' + encodeURIComponent(idRegistro), certificacion);
-            }
+        let resultado;
 
-            await cargarCertificaciones();
-            cerrarFormulario();
-
-            aviso(
-                esNuevo
-                    ? 'Certificación registrada correctamente.'
-                    : 'Certificación modificada correctamente.',
-                'exito'
+        if (editando === null) {
+            resultado = await pedirApi(
+                'POST', '/certificaciones', certificacion
             );
-        } catch (error) {
-            document.getElementById('error_formulario').textContent =
-                error.message || 'No se pudo guardar la certificación en la API.';
+        } else {
+            const id = certificaciones[editando]._id;
+
+            resultado = await pedirApi(
+                'PUT', `/certificaciones/${id}`, certificacion
+            );
         }
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarCertificaciones();
+
+    } catch (error) {
+        aviso(error.message, 'error');
     }
+}
+
+async function eliminarCertificacion(certificacion) {
+
+    if (!confirm(`¿Eliminar "${certificacion.nombre}"?`)) {
+        return;
+    }
+
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/certificaciones/${certificacion._id}`
+        );
+
+        aviso(resultado.mensaje, 'exito');
+        cerrarFormulario();
+        await cargarCertificaciones();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
 // Acciones
 document.getElementById('btn_registrar').addEventListener('click', abrirFormulario);
 document.getElementById('btn_cancelar').addEventListener('click', cerrarFormulario);
 document.getElementById('formulario').addEventListener('submit', guardarCertificacion);
 document.getElementById('buscadorCertificaciones').addEventListener('input', listar);
-document.getElementById('tablaCertificacionesBody').addEventListener('click', function (evento) {
-        const boton = evento.target.closest('.btn_tabla');
+document.getElementById('tablaCertificacionesBody')
+    .addEventListener('click', function(evento) {
 
-        if (boton) {
-            editar(parseInt(boton.getAttribute('data-indice'), 10));
+        const botonEditar = evento.target.closest('.btn_tabla');
+        const botonEliminar = evento.target.closest('.btn_eliminar');
+
+        if (botonEditar) {
+            const indice = Number(botonEditar.dataset.indice);
+            editar(indice);
+        }
+
+        if (botonEliminar) {
+            const indice = Number(botonEliminar.dataset.indice);
+            eliminarCertificacion(certificaciones[indice]);
         }
     });
 

@@ -1,6 +1,8 @@
 /* ===== LISTADO DE CURSOS ===== */
  
 const COLUMNAS = 8;
+let cursos = [];
+let catalogos;
  
 // Cada pestaña es solo un filtro sobre la misma lista guardada en localStorage
 const FILTROS_PESTANA = {
@@ -77,7 +79,7 @@ function filaDetalle(curso, catalogos) {
 }
  
 function filaCurso(curso, catalogos) {
-    const abierto = detallesAbiertos.has(curso.id);
+    const abierto = detallesAbiertos.has(curso._id);
  
     const codigo = curso.generarCodigo
         ? '<span class="pendiente_codigo">Por generar (Desarrollo Curricular)</span>'
@@ -94,8 +96,13 @@ function filaCurso(curso, catalogos) {
     html += '<td>' + esc(carrera) + '</td>';
     html += '<td>' + esc(tematica) + '</td>';
     html += '<td><span class="estado ' + claseEstado(curso.estado) + '">' + esc(curso.estado) + '</span></td>';
-    html += '<td><button type="button" class="btn_tabla" data-id="' + esc(curso.id) + '" aria-expanded="' + abierto + '">' + (abierto ? 'OCULTAR' : 'VER') + '</button></td>';
-    html += '<td class="acciones"><button type="button" class="btn_tabla" data-editar="' + esc(curso.id) + '">EDITAR</button></td>';
+    html += '<td><button type="button" class="btn_tabla" data-id="' + esc(curso._id) + '" aria-expanded="' + abierto + '">' + (abierto ? 'OCULTAR' : 'VER') + '</button></td>';
+    html += '<td class="acciones">' +
+    '<button type="button" class="btn_tabla" data-editar="' +
+        esc(curso._id) + '">EDITAR</button>' +
+    '<button type="button" class="btn_eliminar" data-eliminar="' +
+        esc(curso._id) + '">ELIMINAR</button>' +
+    '</td>';
     html += '</tr>';
 
     if (abierto) {
@@ -117,9 +124,17 @@ function textoBusqueda(curso, catalogos) {
     ].join(' '));
 }
  
+async function cargarCursos() {
+    try {
+        cursos = await pedirApi('GET', '/cursos');
+        listar();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
 function listar() {
-    const cursos = leerLista(CLAVE_CURSOS);
-    const catalogos = leerCatalogos();
+    if (!catalogos) return;
 
     // Contador de cada pestaña
     Object.keys(FILTROS_PESTANA).forEach(function (clave) {
@@ -174,6 +189,28 @@ function mostrarAvisoDeRegistro() {
         }
     }
 }
+
+async function eliminarCurso(curso) {
+
+    if (!confirm(`¿Eliminar "${curso.nombre}"?`)) {
+        return;
+    }
+
+    try {
+        const resultado = await pedirApi(
+            'DELETE', `/cursos/${curso._id}`
+        );
+
+        aviso(resultado.mensaje, 'exito');
+
+        detallesAbiertos.delete(curso._id);
+
+        await cargarCursos();
+
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
  
 // Eventos
 campoBuscador.addEventListener('input', listar);
@@ -185,24 +222,56 @@ document.querySelectorAll('.pestana').forEach(function (boton) {
 });
  
 cuerpoTabla.addEventListener('click', function (evento) {
+
     const botonEditar = evento.target.closest('[data-editar]');
+
     if (botonEditar) {
-        window.location.href = 'formulario_curso.html?editar=' + encodeURIComponent(botonEditar.getAttribute('data-editar'));
+        window.location.href = 'formulario_curso.html?editar=' +
+            encodeURIComponent(botonEditar.getAttribute('data-editar'));
         return;
     }
+
+    const botonEliminar = evento.target.closest('[data-eliminar]');
+
+    if (botonEliminar) {
+        const id = botonEliminar.getAttribute('data-eliminar');
+
+        const curso = cursos.find(function (curso) {
+            return curso._id === id;
+        });
+
+        if (curso) {
+            eliminarCurso(curso);
+        }
+
+        return;
+    }
+
     const boton = evento.target.closest('[data-id]');
+
     if (!boton) {
         return;
     }
+
     const id = boton.getAttribute('data-id');
+
     if (detallesAbiertos.has(id)) {
         detallesAbiertos.delete(id);
     } else {
         detallesAbiertos.add(id);
     }
+
     listar();
 });
- 
-mostrarAvisoDeRegistro();
-listar();
+async function inicializar() {
+    try {
+        catalogos = await leerCatalogos();
+        await cargarCursos();
+        mostrarAvisoDeRegistro();
+    } catch (error) {
+        aviso(error.message, 'error');
+    }
+}
+
+inicializar();
  

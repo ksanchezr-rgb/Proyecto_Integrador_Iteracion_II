@@ -17,8 +17,9 @@ const LIMITES_TEXTO = [['nombre_pc', 40, 'El nombre en Power Campus'], ['desc_co
 // [id del campo en pantalla, nombre de la propiedad guardada en el curso]
 const CAMPOS_DEL_CURSO = [['codigo', 'codigo'], ['nombre', 'nombre'], ['estado', 'estado'], ['nombre_pc', 'nombrePowerCampus'], ['desc_corta', 'descripcionCorta'], ['meta_desc', 'metaDescripcion'], ['modalidad', 'modalidad'], ['nivel', 'nivel'], ['creditos', 'creditos'], ['horas', 'horas'], ['requisitos', 'requisitos'], ['moneda', 'moneda'], ['certificacion', 'certificacion'], ['tematica', 'tematica'], ['area_sfia', 'areaSfia'], ['metadatos', 'metadatos'], ['competencias', 'competencias'], ['capacidades', 'capacidades'], ['perfiles', 'perfiles']];
  
-// Todo sale de los catálogos guardados en localStorage
-const catalogos = leerCatalogos();
+// Datos obtenidos desde la API.
+let catalogos;
+let cursos = [];
  
 /* ---------- Carga de listas desplegables ---------- */
  
@@ -145,21 +146,33 @@ function cargarCursoEnFormulario(curso) {
 }
  
 function iniciarModoModificar() {
-    if (idCursoEditando === null) { return; }
- 
-    cursoEditando = leerLista(CLAVE_CURSOS).find(curso => curso.id === idCursoEditando) || null;
- 
+    if (idCursoEditando === null) {
+        return;
+    }
+
+    cursoEditando = cursos.find(
+        curso => curso._id === idCursoEditando
+    ) || null;
+
     if (cursoEditando === null) {
         const caja = document.getElementById('aviso_edicion');
-        caja.textContent = 'No se encontró el curso que desea modificar.';
+
+        caja.textContent =
+            'No se encontró el curso que desea modificar.';
+
         caja.classList.remove('oculto');
         formularioCurso.classList.add('oculto');
         return;
     }
- 
+
     document.title = 'Modificar curso';
-    document.getElementById('titulo_formulario').textContent = 'MODIFICAR CURSO';
-    document.getElementById('btn_guardar').textContent = 'GUARDAR CAMBIOS';
+
+    document.getElementById('titulo_formulario').textContent =
+        'MODIFICAR CURSO';
+
+    document.getElementById('btn_guardar').textContent =
+        'GUARDAR CAMBIOS';
+
     cargarCursoEnFormulario(cursoEditando);
 }
  
@@ -227,7 +240,6 @@ function existeEn(lista, valor, propiedad) {
  
 function validar(datos) {
     const errores = [];
-    const cursos = leerLista(CLAVE_CURSOS);
     const agregarError = (id, mensaje) => errores.push({ id: id, mensaje: mensaje });
  
     // Valida una lista desplegable: que traiga valor y que exista en su catálogo
@@ -252,7 +264,7 @@ function validar(datos) {
             agregarError('codigo', 'Ingrese el código del curso o solicite su generación a Desarrollo Curricular.');
         } else if (!/^[A-Z0-9][A-Z0-9_-]{1,19}$/.test(datos.codigo)) {
             agregarError('codigo', 'El código debe tener de 2 a 20 caracteres: letras, números, guion o guion bajo, sin espacios.');
-        } else if (cursos.some(curso => curso.id !== idCursoEditando && !curso.generarCodigo && String(curso.codigo).toUpperCase() === datos.codigo)) {
+        } else if (cursos.some(curso => curso._id !== idCursoEditando && !curso.generarCodigo && String(curso.codigo).toUpperCase() === datos.codigo)) {
             agregarError('codigo', 'Ya existe un curso con este código.');
         }
     }
@@ -306,53 +318,57 @@ function validar(datos) {
 async function guardarCurso(evento) {
     evento.preventDefault();
     limpiarErrores();
- 
+
     const datos = leerDatos();
     const errores = validar(datos);
- 
+
     if (errores.length > 0) {
         mostrarErrores(errores);
+
         if (datos.estado === 'Borrador') {
-            document.getElementById('error_formulario').textContent = 'El curso está en estado Borrador: debe rellenar primero los campos obligatorios marcados en rojo para poder guardarlo.';
+            document.getElementById('error_formulario').textContent =
+                'El curso está en estado Borrador: debe rellenar primero los campos obligatorios marcados en rojo para poder guardarlo.';
         }
+
         return;
     }
- 
-    const cursos = leerLista(CLAVE_CURSOS);
-    const cursoNuevo = { ...datos, codigo: datos.generarCodigo ? '' : datos.codigo, creditos: datos.creditos === '' ? '' : Number(datos.creditos), horas: datos.horas === '' ? '' : Number(datos.horas) };
- 
-    // Registrar curso mediante la API.
-    if (cursoEditando === null) {
-        try {
-            const resultado = await pedirApi('POST', '/cursos', cursoNuevo);
 
-            if (resultado.mensaje) {
-                mostrarMensaje(resultado.mensaje, 'exito');
-            }
+    const cursoNuevo = {
+        ...datos,
+        codigo: datos.generarCodigo ? '' : datos.codigo,
+        creditos: datos.creditos === '' ? '' : Number(datos.creditos),
+        horas: datos.horas === '' ? '' : Number(datos.horas)
+    };
 
-        } catch (error) {
-            document.getElementById('error_formulario').textContent = error.message;
-            mostrarMensaje(error.message, 'error');
-            return;
-        }
-    }
-
-    if (cursoEditando === null) {
-        const idNuevo = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-        cursos.push({ ...cursoNuevo, id: idNuevo, fechaRegistro: new Date().toISOString() });
-    } else {
-        const posicion = cursos.findIndex(curso => curso.id === cursoEditando.id);
-        cursos[posicion] = { ...cursoEditando, ...cursoNuevo, fechaModificacion: new Date().toISOString() };
-    }
- 
     try {
-        guardarLista(CLAVE_CURSOS, cursos);
+        let resultado;
+
+        // Registrar un curso nuevo.
+        if (cursoEditando === null) {
+
+            resultado = await pedirApi(
+                'POST', '/cursos', cursoNuevo
+            );
+
+        } else {
+
+            // Modificar un curso existente.
+            resultado = await pedirApi(
+                'PUT', `/cursos/${cursoEditando._id}`, cursoNuevo
+            );
+        }
+
+        mostrarMensaje(resultado.mensaje, 'exito');
+
+        window.location.href = 'cursos.html?' +
+            (cursoEditando === null ? 'registrado=1' : 'modificado=1');
+
     } catch (error) {
-        document.getElementById('error_formulario').textContent = 'No se pudo guardar el curso porque el almacenamiento del navegador está lleno.';
-        return;
+        document.getElementById('error_formulario').textContent =
+            error.message;
+
+        mostrarMensaje(error.message, 'error');
     }
- 
-    window.location.href = 'cursos.html?' + (cursoEditando === null ? 'registrado=1' : 'modificado=1');
 }
  
 /* ---------- Eventos ---------- */
@@ -370,8 +386,34 @@ formularioCurso.addEventListener('input', evento => { if (evento.target.id) { li
 formularioCurso.addEventListener('change', evento => { if (evento.target.id) { limpiarError(evento.target.id); } });
 formularioCurso.addEventListener('submit', guardarCurso);
  
-cargarListas();
-iniciarModoModificar();
-activarContador('nombre_pc', 'contador_nombre_pc', 40);
-activarContador('desc_corta', 'contador_desc_corta', 250);
-activarContador('meta_desc', 'contador_meta_desc', 155);
+async function inicializar() {
+    const botonGuardar = document.getElementById('btn_guardar');
+    botonGuardar.disabled = true;
+    selectEscuela.disabled = true;
+
+    try {
+        catalogos = await leerCatalogos();
+        cursos = await pedirApi('GET', '/cursos');
+
+        cargarListas();
+        iniciarModoModificar();
+
+        activarContador('nombre_pc', 'contador_nombre_pc', 40);
+        activarContador('desc_corta', 'contador_desc_corta', 250);
+        activarContador('meta_desc', 'contador_meta_desc', 155);
+
+        selectEscuela.disabled = false;
+
+        if (idCursoEditando === null || cursoEditando !== null) {
+            botonGuardar.disabled = false;
+        }
+
+    } catch (error) {
+        document.getElementById('error_formulario').textContent =
+            error.message;
+
+        mostrarMensaje(error.message, 'error');
+    }
+}
+
+inicializar();

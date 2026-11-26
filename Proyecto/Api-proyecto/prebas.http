@@ -1,0 +1,40 @@
+
+@api = http://localhost:4000/api
+
+### Prueba 1: Consultar escuelas
+GET {{api}}/escuelas
+
+### Prueba 2: Registrar una escuela
+POST {{api}}/escuelas
+Content-Type: application/json
+
+{
+  "nombre": "Escuela de Ingeniería"
+}
+
+### Prueba 3: Registrar una escuela sin nombre
+POST {{api}}/escuelas
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+
+### Prueba 4: Registrar una escuela duplicada
+POST {{api}}/escuelas
+Content-Type: application/json
+
+{
+  "nombre": "Escuela de Ingeniería"
+}
+
+
+### PRUEBA 1: Verificar que la API funciona
+GET {{api}}
+
+### PRUEBA 2: Verificar una ruta inexistente
+GET {{api}}/no-existe
+
+### PRUEBA 3: Enviar un JSON incorrecto
+POST {{api}}
+Content-Type: application/json

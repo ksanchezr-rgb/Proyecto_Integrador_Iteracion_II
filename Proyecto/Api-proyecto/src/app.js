@@ -2,6 +2,7 @@ require('dotenv').config({ quiet: true });
 
 const express = require('express');
 const cors = require('cors');
+const carrerasRoutes = require('./routes/carreras.routes');
 const rutaNoEncontrada = require('./middlewares/rutaNoEncontrada');
 const manejarErrores = require('./middlewares/manejarErrores');
 
@@ -22,6 +23,8 @@ app.get('/api', (req, res) => {
         mensaje: 'API de Desarrollo Curricular funcionando'
     });
 });
+// Rutas para registrar carreras.
+app.use('/api/carreras', carrerasRoutes);
 
 // 5. Manejo de errores.
 app.use(rutaNoEncontrada);

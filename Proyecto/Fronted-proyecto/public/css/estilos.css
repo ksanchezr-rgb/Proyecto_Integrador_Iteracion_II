@@ -32,8 +32,10 @@ textarea:focus-visible {
   object-fit: contain; 
 }
 
-.enlace_menu { 
+.enlace_menu, 
+.navbar-nav .nav-link.enlace_menu { 
   color: #ffffff !important; 
+  text-decoration: none !important;
   border-bottom: 2px solid transparent;
 }
 
@@ -42,22 +44,39 @@ textarea:focus-visible {
   border-bottom-color: #ffffff; 
 }
 
-.btn_idioma { 
+.btn_idioma,
+.btn.btn_idioma  { 
   background-color: var(--azul-principal); 
+  color: #ffffff !important; 
+  border: none !important; 
+  box-shadow: none !important; 
+  border-radius: 20px !important; 
 }
 
 .btn_idioma:hover,
-.btn_idioma:focus-visible { 
+.btn_idioma:focus-visible,
+.btn.btn_idioma:hover,
+.btn.btn_idioma:focus-visible { 
   background-color: var(--azul-oscuro); 
+  color: #ffffff !important; 
+  border: none !important; 
+  box-shadow: none !important;
 }
 
-.btn_salir { 
-  background-color: var(--rojo-salir); 
+.btn_salir,
+.btn.btn_salir { 
+  background-color: var(--rojo-salir);
+  color: #ffffff !important; 
+  border: none !important; 
+  border-radius: 8px !important;  
 }
 
 .btn_salir:hover,
-.btn_salir:focus-visible { 
+.btn_salir:focus-visible,
+.btn.btn_salir:hover,
+.btn.btn_salir:focus-visible { 
   background-color: var(--rojo-salir-hover); 
+  color: #ffffff !important;
 }
 
 /* Lista del menú lateral */

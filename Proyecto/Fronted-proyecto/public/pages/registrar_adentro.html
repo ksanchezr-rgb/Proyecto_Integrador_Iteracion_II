@@ -12,9 +12,9 @@
 </head>
 <body class="min-vh-100 d-flex flex-column bg-white text-dark">
     <!-- Menú de navegación institucional -->
-    <header class="navbar navbar-expand-lg navbar-darkheader">
-        <div class="container-fluid menu px-4 py-2"></div>
-            <div class="logo">
+    <header class="navbar navbar-expand-lg navbar-dark header">
+        <div class="container-fluid menu px-4 py-2">
+            <div class="d-flex align-items-center gap-3 logo">
                 <img src="../img/images-removebg-preview.png" alt="Logo CENFOTEC" class="imagen">
                 <span class="logo_texto fw-bold text-white fs-5"></span>
             </div>
@@ -26,7 +26,7 @@
             <div class="collapse navbar-collapse justify-content-end" id="menuPrincipal">
                 <ul class="navbar-nav align-items-lg-center gap-lg-3 fw-bold small opciones">
                     <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="gestion_usuarios.html">USUARIOS</a></li>
-                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu enlace_activo" href="inicio_para_catalogos.html">CATÁLOGOS</a></li>
+                    <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="inicio_para_catalogos.html">CATÁLOGOS</a></li>
                     <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="cursos.html">CURSOS</a></li>
                     <li class="nav-item elemento_menu"><a class="nav-link enlace_menu" href="reportes.html">REPORTES</a></li>
                     <li class="nav-item elemento_menu"><button type="button" class="btn text-white fw-bold small rounded-pill px-3 py-2 btn_header btn_idioma">ES / EN</button></li>
@@ -36,89 +36,89 @@
         </div>
     </header>
 
-    <main id="inicio">
-        <div class="row g-0 w-100 seccion-catalogo-contenedor" style="justify-content: center; padding: 20px;">
+    <main id="inicio" class="container-fluid p-0 flex-grow-1">
+        <div class="container my-4 py-3 seccion-catalogo-contenedor" style="max-width: 800px;">
             
             <!--HU-10: Registrar una nueva cuenta de usuario -->
-            <div class="catalogo_contenedor-principal" style="width: 100%; max-width: 800px;">
+            <div class="w-100 catalogo_contenedor-principal" style="max-width: 800px;">
                 <section class="seccion_contenedor">
-                    <h2 class="seccion_titulo">Registrar Nueva Cuenta de Usuario</h2>
-                    <p style="margin-bottom: 20px; color: #666; font-size: 0.95rem;">Complete los campos requeridos para establecer su cuenta en el sistema...</p>
+                    <h2 class="fs-4 fw-bold pb-2 mb-4 seccion_titulo">Registrar Nueva Cuenta de Usuario</h2>
+                    <p class="mb-4" style="color: #666; font-size: 0.95rem;">Complete los campos requeridos para establecer su cuenta en el sistema...</p>
 
-                    <form action="#" class="formulario" id="formulario_registro" novalidate>
+                    <form action="#" class="d-flex flex-column gap-3 formulario" id="formulario_registro" novalidate>
                         
                         <!-- Nombre -->
                         <div class="formulario_grupo" id="grupo_nombre">
-                            <label for="nombre" class="formulario_label">Nombre</label>
-                            <div class="formulario_grupo-input">
-                                <input type="text" class="formulario_input" name="nombre" id="nombre" placeholder="Ingrese su nombre (mínimo 3 letras)">
+                            <label for="nombre" class="form-label fw-bold mb-1 formulario_label">Nombre</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="text" class="form-control w-100 formulario_input" name="nombre" id="nombre" placeholder="Ingrese su nombre (mínimo 3 letras)">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">Ingrese su nombre (mínimo 3 letras).</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Ingrese su nombre (mínimo 3 letras).</p>
                         </div>
 
                         <!-- Primer apellido -->
                         <div class="formulario_grupo" id="grupo_primer_apellido">
-                            <label for="primer_apellido" class="formulario_label">Primer Apellido</label>
-                            <div class="formulario_grupo-input">
-                                <input type="text" class="formulario_input" name="primer_apellido" id="primer_apellido" placeholder="Ingrese su primer apellido (mínimo 3 letras)">
+                            <label for="primer_apellido" class="form-label fw-bold mb-1 formulario_label">Primer Apellido</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="text" class="form-control w-100 formulario_input" name="primer_apellido" id="primer_apellido" placeholder="Ingrese su primer apellido (mínimo 3 letras)">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">Ingrese sus apellidos (mínimo 3 letras).</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Ingrese sus apellidos (mínimo 3 letras).</p>
                         </div>
 
                         <!-- Segundo Apellido -->
                         <div class="formulario_grupo" id="grupo_segundo_apellido">
-                            <label for="segundo_apellido" class="formulario_label">Segundo Apellido</label>
-                            <div class="formulario_grupo-input">
-                                <input type="text" class="formulario_input" name="segundo_apellido" id="segundo_apellido" placeholder="Ingrese su segundo apellido">
+                            <label for="segundo_apellido" class="form-label fw-bold mb-1 formulario_label">Segundo Apellido</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="text" class="form-control w-100 formulario_input" name="segundo_apellido" id="segundo_apellido" placeholder="Ingrese su segundo apellido">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                                <p class="formulario_input-error">Ingrese su segundo apellido (mínimo 3 letras).</p>
+                                <p class="mt-1 mb-0 formulario_input-error">Ingrese su segundo apellido (mínimo 3 letras).</p>
                         </div>
 
                         <!-- Identificación -->
                         <div class="formulario_grupo" id="grupo_identificacion">
-                            <label for="identificacion" class="formulario_label">Identificación</label>
-                            <div class="formulario_grupo-input">
-                                <input type="text" class="formulario_input" name="identificacion" id="identificacion" placeholder="Ej: 112340567">
+                            <label for="identificacion" class="form-label fw-bold mb-1 formulario_label">Identificación</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="text" class="form-control w-100 formulario_input" name="identificacion" id="identificacion" placeholder="Ej: 112340567">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">Ingrese un número de identificación válido.</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Ingrese un número de identificación válido.</p>
                         </div>
 
                         <!-- Correo Electrónico -->
                         <div class="formulario_grupo" id="grupo_correo">
-                            <label for="correo" class="formulario_label">Correo Electrónico</label>
-                            <div class="formulario_grupo-input">
-                                <input type="email" class="formulario_input" name="correo" id="correo" placeholder="usuario@ucenfotec.ac.cr">
+                            <label for="correo" class="form-label fw-bold mb-1 formulario_label">Correo Electrónico</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="email" class="form-control w-100 formulario_input" name="correo" id="correo" placeholder="usuario@ucenfotec.ac.cr">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">Ingrese un correo con formato válido (admin@dominio.com).</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Ingrese un correo con formato válido (admin@dominio.com).</p>
                         </div>
 
                         <!-- Teléfono -->
                         <div class="formulario_grupo" id="grupo_telefono">
-                            <label for="telefono" class="formulario_label">Teléfono</label>
-                            <div class="formulario_grupo-input">
-                                <input type="tel" class="formulario_input" name="telefono" id="telefono" placeholder="Ej: 88888888">
+                            <label for="telefono" class="form-label fw-bold mb-1 formulario_label">Teléfono</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="tel" class="form-control w-100 formulario_input" name="telefono" id="telefono" placeholder="Ej: 88888888">
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">El teléfono debe contener exactamente 8 dígitos numéricos.</p>
+                            <p class="mt-1 mb-0 formulario_input-error">El teléfono debe contener exactamente 8 dígitos numéricos.</p>
                         </div>
 
                         <!--  (HU-15): Fecha de Nacimiento -->
                         <div class="formulario_grupo" id="grupo_fecha_nacimiento">
-                            <label for="fechaNacimiento" class="formulario_label">Fecha de Nacimiento</label>
-                            <div class="formulario_grupo-input">
-                                <input type="date" class="formulario_input" name="fechaNacimiento" id="fechaNacimiento">
+                            <label for="fechaNacimiento" class="form-label fw-bold mb-1 formulario_label">Fecha de Nacimiento</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="date" class="form-control w-100 formulario_input" name="fechaNacimiento" id="fechaNacimiento">
                             </div>
-                            <p class="formulario_input-error">Debe seleccionar una fecha de nacimiento válida.</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Debe seleccionar una fecha de nacimiento válida.</p>
                         </div>
                          <!-- Edad Calculada -->
                         <div class="formulario_grupo" id="grupo_edad_calculada">
-                            <label class="formulario_label">Edad Actual</label>
-                            <div class="tarjeta_edad_info">
+                            <label class="form-label fw-bold mb-1 formulario_label">Edad Actual</label>
+                            <div class="d-flex align-items-center gap-2 w-100 tarjeta_edad_info">
                                <i class="bx bx-info-circle icono_edad"></i>
                                 <span id="edad_calculada" class="texto_edad">Seleccione su fecha de nacimiento</span>
                             </div>
@@ -126,9 +126,9 @@
 
                         <!-- Sexo -->
                         <div class="formulario_grupo" id="grupo_sexo">
-                            <label for="sexo" class="formulario_label">Genero</label>
-                            <div class="formulario_grupo-input">
-                                <select class="formulario_input" name="sexo" id="sexo">
+                            <label for="sexo" class="form-label fw-bold mb-1 formulario_label">Genero</label>
+                            <div class="position-relative w-100  formulario_grupo-input">
+                                <select class="form-select w-100 formulario_input" name="sexo" id="sexo">
                                     <option value="" disabled selected>Seleccione una opción</option>
                                     <option value="Femenino">Femenino</option>
                                     <option value="Masculino">Masculino</option>
@@ -136,33 +136,33 @@
                                 </select>
                               <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">Por favor, seleccione una opción de género.</p>
+                            <p class="mt-1 mb-0 formulario_input-error">Por favor, seleccione una opción de género.</p>
                         </div>
 
                         <!-- Imagen de Perfil -->
                         <div class="formulario_grupo" id="grupo_imagen_perfil">
-                            <label for="imagen_perfil" class="formulario_label">Imagen de Perfil</label>
-                            <div class="formulario_grupo-input">
-                                <input type="file" class="formulario_input" name="imagen_perfil" id="imagen_perfil" accept="image/*">
+                            <label for="imagen_perfil" class="form-label fw-bold mb-1 formulario_label">Imagen de Perfil</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="file" class="form-control w-100 formulario_input" name="imagen_perfil" id="imagen_perfil" accept="image/*">
                             </div>
                         </div>
 
                         <!-- Contraseña -->
                         <div class="formulario_grupo" id="grupo_contrasena">
-                            <label for="contrasena" class="formulario_label">Contraseña</label>
-                            <div class="formulario_grupo-input" style ="position: relative;">
-                                <input type="password" class="formulario_input" name="contrasena" id="contrasena" placeholder="8 a 15 caracteres (Mayús, minús, número)" autocomplete="new-password">
-                                <i class="bx bx-show" id="togglePassword" class="icono-password-toggle"></i>
+                            <label for="contrasena" class="form-label fw-bold mb-1 formulario_label">Contraseña</label>
+                            <div class="position-relative w-100 formulario_grupo-input">
+                                <input type="password" class="form-control w-100 formulario_input" name="contrasena" id="contrasena" placeholder="8 a 15 caracteres (Mayús, minús, número)" autocomplete="new-password">
+                                <i class="bx bx-show icono-password-toggle" id="togglePassword"></i>
                                 <i class="formulario_validacion-estado bx bx-x-circle"></i>
                             </div>
-                            <p class="formulario_input-error">La contraseña que ingresó no cumple con los requisitos obligatorios.</p>
+                            <p class="mt-1 mb-0 formulario_input-error">La contraseña que ingresó no cumple con los requisitos obligatorios.</p>
                         </div>
 
                         <!-- Mensaje de error general -->
-                        <div id="aviso" class="aviso oculto"></div>
+                        <div id="aviso" class="alert aviso oculto"></div>
 
                         <!-- Botones de Acción -->
-                        <div class="formulario__grupo formulario__grupo-acciones" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
+                        <div class="d-flex justify-content-end gap-3 mt-4 formulario__grupo formulario__grupo-acciones">
                             <p class="formulario_mensaje-exito" id="formulario_mensaje-exito"style="display: none !important;"></p>
                             <button type="button" class="btn btn-secondary fw-bold small px-3 py-2 btn_cancelar" onclick="window.location.href='gestion_usuarios.html'">CANCELAR</button>
                             <input class="btn text-white fw-bold small px-3 py-2 btn_enviar" type="submit" value="REGISTRAR CUENTA">
@@ -175,42 +175,46 @@
         </div>
     </main>
 
-    <footer class="footer_referencia">
-        <div class="footer_columna">
-            <p><strong>Correo electrónico: </strong></p>
-            <p>info@ucenfotec.ac.cr</p>
-            <p><strong>Dirección:</strong></p>
-            <p>
-                Barrio Francisco Peralta, sobre Avenida Central y Calle 33, 
-                10104 San José, Provincia de San José, Costa Rica.
-            </p>
-        </div>
+          <footer class="py-4 px-4 text-white footer_referencia">
+        <div class="container-fluid">
+            <div class="row g-4">
+                <div class="col-12 col-sm-6 col-lg-3 footer_columna">
+                    <p class="mb-1"><strong>Correo electrónico:</strong></p>
+                    <p>info@ucenfotec.ac.cr</p>
+                    <p class="mb-1"><strong>Dirección:</strong></p>
+                    <p class="mb-0">
+                        Barrio Francisco Peralta, sobre Avenida Central y Calle 33,
+                        10104 San José, Provincia de San José, Costa Rica.
+                    </p>
+                </div>
 
-        <div class="footer_columna">
-            <h3>REDES SOCIALES</h3>
-            <div class="footer_redes">
-                <div class="footer_redes">
-                    <a href="https://www.facebook.com/UCenfotec">f</a>
-                    <a href="https://x.com/ucenfotec">𝕏</a>
-                    <a href="https://www.youtube.com/@UniversidadCenfotec/videos">▶</a>
-                    <a href="https://www.instagram.com/ucenfotec">回</a>
-                    <a href="https://www.linkedin.com/school/universidad-cenfotec/">in</a>
+                <div class="col-12 col-sm-6 col-lg-3 footer_columna">
+                    <h2 class="h6 text-uppercase">REDES SOCIALES</h2>
+                    <div class="d-flex flex-wrap gap-2 footer_redes">
+                        <a class="d-inline-flex justify-content-center align-items-center rounded-circle text-white text-decoration-none" href="https://www.facebook.com/UCenfotec" aria-label="Facebook">f</a>
+                        <a class="d-inline-flex justify-content-center align-items-center rounded-circle text-white text-decoration-none" href="https://x.com/ucenfotec" aria-label="X">𝕏</a>
+                        <a class="d-inline-flex justify-content-center align-items-center rounded-circle text-white text-decoration-none" href="https://www.youtube.com/@UniversidadCenfotec/videos" aria-label="YouTube">▶</a>
+                        <a class="d-inline-flex justify-content-center align-items-center rounded-circle text-white text-decoration-none" href="https://www.instagram.com/ucenfotec" aria-label="Instagram">回</a>
+                        <a class="d-inline-flex justify-content-center align-items-center rounded-circle text-white text-decoration-none" href="https://www.linkedin.com/school/universidad-cenfotec/" aria-label="LinkedIn">in</a>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3 footer_columna">
+                    <h2 class="h6 text-uppercase">BUSCAR</h2>
+                    <div class="input-group footer_buscador" style="max-width: 260px;">
+                        <input type="text" class="form-control" placeholder="Buscar..." aria-label="Buscar en el sitio">
+                        <button class="btn btn-dark" type="button" aria-label="Ejecutar búsqueda">🔍</button>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3 footer_columna">
+                    <h2 class="h6 text-uppercase">VÍNCULOS DE INTERÉS</h2>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><a class="text-decoration-none" href="#">&gt; Términos y condiciones de uso del sitio web</a></li>
+                        <li class="mb-2"><a class="text-decoration-none" href="#">&gt; Centro de Asistencia</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-        <div class="footer_columna">
-            <h3>BUSCAR</h3>
-            <div class="footer_buscador">
-                <input type="text" placeholder="Buscar...">
-                <button>🔍</button>
-            </div>
-        </div>
-        <div class="footer_columna">
-            <h3>VÍNCULOS DE INTERÉS</h3>
-            <ul>
-                <li><a href="#">> Términos y condiciones de uso del sitio web</a></li>
-                <li><a href="#">> Centro de Asistencia</a></li>
-            </ul>
         </div>
     </footer>
 
